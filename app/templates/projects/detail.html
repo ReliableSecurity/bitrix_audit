@@ -1,0 +1,365 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project.name }} - Bitrix24 Security Audit{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <!-- Project Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <h1 class="text-cyber-primary glow">
+            <i class="fas fa-project-diagram"></i> {{ project.name }}
+            <span class="badge bg-{% if project.status=='active' %}success{% elif project.status=='archived' %}secondary{% else %}warning{% endif %} ms-2">{{ project.status|upper }}</span>
+          </h1>
+          <p class="text-muted mb-1">
+            <i class="fas fa-link"></i> <a href="{{ project.url }}" target="_blank" class="text-cyber-accent">{{ project.url }}</a>
+          </p>
+          <p class="text-muted">
+            {% if project.description %}{{ project.description }}{% else %}Без описания{% endif %}
+          </p>
+          <div class="hacker-text">
+            <small>
+              > PROJECT ID: <span class="text-cyber-primary">{{ project.id }}</span><br>
+              > CREATED: <span class="text-cyber-success">{{ project.created_at.strftime('%d.%m.%Y %H:%M') }}</span><br>
+              > UPDATED: <span class="text-cyber-warning">{{ (project.updated_at or project.created_at).strftime('%d.%m.%Y %H:%M') }}</span>
+            </small>
+          </div>
+        </div>
+        <div class="text-end">
+          <a href="{{ url_for('projects') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Назад к проектам
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Cards Row -->
+  <div class="row mb-4">
+    <!-- Vulnerability Scanner -->
+    <div class="col-lg-6 mb-4">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-bug"></i> VULNERABILITY SCANNER
+          </h5>
+        </div>
+        <div class="card-body">
+          {% if latest_vuln_scan %}
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <h6 class="text-cyber-accent">Последнее сканирование</h6>
+              <small class="text-muted">{{ latest_vuln_scan.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
+            </div>
+            <div>
+              {% set stats = latest_vuln_scan.get_vulnerability_stats() %}
+              <span class="badge bg-danger me-1">C: {{ stats.critical }}</span>
+              <span class="badge bg-warning text-dark me-1">H: {{ stats.high }}</span>
+              <span class="badge bg-primary me-1">M: {{ stats.medium }}</span>
+              <span class="badge bg-success text-dark">L: {{ stats.low }}</span>
+            </div>
+          </div>
+          {% endif %}
+          
+          <button type="button" 
+                  class="btn btn-primary w-100 pulse" 
+                  id="scan-button"
+                  onclick="AKUMA.startVulnerabilityScan({{ project.id }})">
+            <i class="fas fa-search"></i> 
+            ЗАПУСТИТЬ СКАНИРОВАНИЕ
+          </button>
+          
+          <div class="mt-2">
+            <small class="text-muted">
+              <i class="fas fa-info-circle"></i> 
+              Автоматический поиск уязвимостей в портале
+            </small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- System Report Upload -->
+    <div class="col-lg-6 mb-4">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-server"></i> SYSTEM AUDIT REPORT
+          </h5>
+        </div>
+        <div class="card-body">
+          {% if latest_system_report %}
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <h6 class="text-cyber-accent">Последний отчёт</h6>
+              <small class="text-muted">{{ latest_system_report.report_date.strftime('%d.%m.%Y %H:%M') }}</small>
+            </div>
+            <div>
+              <span class="badge bg-success">{{ latest_system_report.filename or 'report.json' }}</span>
+            </div>
+          </div>
+          {% endif %}
+
+          <form method="POST" action="{{ url_for('upload_system_report', project_id=project.id) }}" enctype="multipart/form-data" id="uploadForm">
+            <div class="mb-3">
+              <label class="form-label">Файл отчёта (JSON)</label>
+              <input type="file" class="form-control" name="report_file" accept=".json" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Дата генерации отчёта</label>
+              <input type="datetime-local" class="form-control" name="report_date" required>
+            </div>
+            <button type="submit" class="btn btn-success w-100">
+              <i class="fas fa-upload"></i> 
+              ЗАГРУЗИТЬ ОТЧЁТ
+            </button>
+          </form>
+          
+          <div class="mt-2">
+            <small class="text-muted">
+              <i class="fas fa-info-circle"></i> 
+              Результаты скрипта bitrix24_system_check.sh
+            </small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results Section -->
+  <div class="row">
+    <!-- Vulnerability Results -->
+    {% if latest_vuln_scan %}
+    <div class="col-lg-8 mb-4">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-shield-alt"></i> VULNERABILITY SCAN RESULTS
+          </h5>
+        </div>
+        <div class="card-body">
+          {% set vulnerabilities = latest_vuln_scan.get_vulnerabilities() %}
+          {% if vulnerabilities %}
+          <div class="table-responsive">
+            <table class="table table-dark table-sm">
+              <thead>
+                <tr>
+                  <th>Тип</th>
+                  <th>Критичность</th>
+                  <th>Описание</th>
+                  <th>Рекомендация</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for vuln in vulnerabilities %}
+                <tr>
+                  <td><span class="badge bg-secondary">{{ vuln.type }}</span></td>
+                  <td><span class="severity-{{ vuln.severity|lower }}">{{ vuln.severity }}</span></td>
+                  <td>{{ vuln.description }}</td>
+                  <td><small class="text-muted">{{ vuln.recommendation }}</small></td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="text-center py-3">
+            <i class="fas fa-shield-check fa-2x text-success mb-2"></i>
+            <p class="text-muted">Уязвимостей не найдено</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Charts & Stats -->
+    <div class="col-lg-4 mb-4">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-chart-pie"></i> STATISTICS
+          </h5>
+        </div>
+        <div class="card-body">
+          {% if latest_vuln_scan %}
+          <div style="height: 200px;">
+            <canvas id="vulnChart" width="300" height="200"></canvas>
+          </div>
+          {% endif %}
+          
+          <div class="mt-3">
+            <div class="d-flex justify-content-between py-2">
+              <span>Всего сканирований:</span>
+              <span class="text-cyber-primary">{{ project.vulnerability_scans|length }}</span>
+            </div>
+            <div class="d-flex justify-content-between py-2">
+              <span>Системных отчётов:</span>
+              <span class="text-cyber-success">{{ project.system_reports|length }}</span>
+            </div>
+            <div class="d-flex justify-content-between py-2">
+              <span>Создатель:</span>
+              <span class="text-cyber-accent">{{ project.created_by.username }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- System Report Details -->
+  {% if latest_system_report %}
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-server"></i> SYSTEM REPORT DETAILS
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="hacker-text">
+            <div class="row">
+              <div class="col-md-6">
+                <h6 class="text-cyber-accent">Информация о файле:</h6>
+                <p class="system-info-text">
+                  > FILENAME: <span class="text-cyber-primary">{{ latest_system_report.filename or 'report.json' }}</span><br>
+                  > UPLOADED BY: <span class="text-cyber-success">{{ latest_system_report.uploaded_by.username }}</span><br>
+                  > UPLOAD DATE: <span class="text-cyber-warning">{{ latest_system_report.created_at.strftime('%d.%m.%Y %H:%M') }}</span><br>
+                  > REPORT DATE: <span class="text-cyber-accent">{{ latest_system_report.report_date.strftime('%d.%m.%Y %H:%M') }}</span>
+                </p>
+              </div>
+              <div class="col-md-6">
+                <h6 class="text-cyber-accent">Системная информация:</h6>
+                {% set report_data = latest_system_report.get_report_data() %}
+                <p class="system-info-text">
+                  > OS: <span class="text-cyber-primary">{{ report_data.get('system_info', {}).get('os_name', 'N/A') }}</span><br>
+                  > HOSTNAME: <span class="text-cyber-success">{{ report_data.get('report_info', {}).get('hostname', 'N/A') }}</span><br>
+                  > KERNEL: <span class="text-cyber-warning">{{ report_data.get('system_info', {}).get('kernel_version', 'N/A') }}</span><br>
+                  > UPTIME: <span class="text-cyber-accent">{{ report_data.get('system_info', {}).get('uptime', 'N/A') }}</span>
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Развёрнутая системная информация -->
+          <hr class="border-cyber mt-4">
+          <div class="row mt-4 system-report-section">
+            <div class="col-lg-4">
+              <h6 class="text-cyber-success">📊 Performance:</h6>
+              <ul class="list-unstyled text-light">
+                <li><strong>🔋 CPU:</strong><br>
+                    <span class="text-cyber-primary wrap-text">{{ report_data.get('hardware', {}).get('cpu_model', 'N/A') }}</span>
+                </li>
+                <li>🔋 Load: <span class="text-cyber-warning">{{ report_data.get('performance', {}).get('load_average', 'N/A') }}</span></li>
+                <li>💾 Memory: <span class="text-cyber-accent">{{ report_data.get('hardware', {}).get('ram_used_gb', 'N/A') }}GB / {{ report_data.get('hardware', {}).get('ram_total_gb', 'N/A') }}GB</span></li>
+                <li>💾 Usage: <span class="text-{% if report_data.get('performance', {}).get('memory_usage_percent', '0')|float > 80 %}danger{% elif report_data.get('performance', {}).get('memory_usage_percent', '0')|float > 60 %}warning{% else %}success{% endif %}">{{ report_data.get('performance', {}).get('memory_usage_percent', 'N/A') }}%</span></li>
+              </ul>
+            </div>
+            <div class="col-lg-4">
+              <h6 class="text-cyber-warning">🔒 Security:</h6>
+              <ul class="list-unstyled text-light">
+                <li>
+                  <i class="fas fa-{% if report_data.get('security', {}).get('fail2ban') == 'ACTIVE' %}check text-success{% else %}times text-danger{% endif %}"></i>
+                  Fail2ban: <span class="text-{% if report_data.get('security', {}).get('fail2ban') == 'ACTIVE' %}success{% else %}danger{% endif %}">{{ report_data.get('security', {}).get('fail2ban', 'N/A') }}</span>
+                </li>
+                <li>
+                  <i class="fas fa-{% if report_data.get('security', {}).get('firewall') == 'ACTIVE' %}check text-success{% else %}times text-danger{% endif %}"></i>
+                  Firewall: <span class="text-{% if report_data.get('security', {}).get('firewall') == 'ACTIVE' %}success{% else %}danger{% endif %}">{{ report_data.get('security', {}).get('firewall', 'N/A') }}</span>
+                </li>
+                <li>
+                  <i class="fas fa-{% if report_data.get('network', {}).get('https_port_443') == 'OPEN' %}check text-success{% else %}times text-warning{% endif %}"></i>
+                  HTTPS: <span class="text-{% if report_data.get('network', {}).get('https_port_443') == 'OPEN' %}success{% else %}warning{% endif %}">{{ report_data.get('network', {}).get('https_port_443', 'N/A') }}</span>
+                </li>
+              </ul>
+            </div>
+            <div class="col-lg-4">
+              <h6 class="text-cyber-accent">⚙️ Software Status:</h6>
+              <ul class="list-unstyled text-light">
+                <li>
+                  <i class="fas fa-{% if report_data.get('software', {}).get('php', {}).get('status') == 'OK' %}check text-success{% else %}exclamation-triangle text-warning{% endif %}"></i>
+                  PHP: <span class="text-cyber-primary wrap-text">{{ report_data.get('software', {}).get('php', {}).get('version', 'N/A') }}</span>
+                </li>
+                <li>
+                  <i class="fas fa-{% if report_data.get('software', {}).get('mysql', {}).get('status') == 'OK' %}check text-success{% else %}times text-danger{% endif %}"></i>
+                  MySQL: <span class="text-{% if report_data.get('software', {}).get('mysql', {}).get('status') == 'OK' %}success{% else %}danger{% endif %} wrap-text">{{ report_data.get('software', {}).get('mysql', {}).get('version', 'N/A') }}</span>
+                </li>
+                <li>
+                  <i class="fas fa-{% if report_data.get('software', {}).get('nginx', {}).get('status') == 'OK' %}check text-success{% elif report_data.get('software', {}).get('apache', {}).get('status') == 'OK' %}check text-success{% else %}times text-danger{% endif %}"></i>
+                  Web Server: <span class="text-{% if report_data.get('software', {}).get('nginx', {}).get('status') == 'OK' or report_data.get('software', {}).get('apache', {}).get('status') == 'OK' %}success{% else %}danger{% endif %} wrap-text">{% if report_data.get('software', {}).get('nginx', {}).get('status') != 'NOT_FOUND' %}Nginx{% elif report_data.get('software', {}).get('apache', {}).get('status') != 'NOT_FOUND' %}Apache{% else %}Not Found{% endif %}</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+          
+          <!-- Рекомендации -->
+          {% if report_data.get('summary', {}).get('recommendations') %}
+          <hr class="border-cyber mt-4">
+          <div class="mt-4">
+            <h6 class="text-cyber-danger">⚠️ Рекомендации:</h6>
+            <div class="alert alert-warning bg-dark border-warning">
+              <ul class="mb-0">
+                {% for rec in report_data.get('summary', {}).get('recommendations', []) %}
+                <li>{{ rec }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Initialize vulnerability chart if we have data
+document.addEventListener('DOMContentLoaded', function() {
+    {% if latest_vuln_scan %}
+    {% set stats = latest_vuln_scan.get_vulnerability_stats() %}
+    const vulnData = {
+        critical: {{ stats.critical }},
+        high: {{ stats.high }},
+        medium: {{ stats.medium }},
+        low: {{ stats.low }}
+    };
+    AKUMA.createVulnerabilityChart('vulnChart', vulnData);
+    {% endif %}
+    
+    // Set current datetime for report upload
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    document.querySelector('input[name="report_date"]').value = now.toISOString().slice(0, 16);
+});
+
+// Handle form submission
+document.getElementById('uploadForm').addEventListener('submit', function(e) {
+    const fileInput = this.querySelector('input[type="file"]');
+    const dateInput = this.querySelector('input[name="report_date"]');
+    
+    if (!fileInput.files[0]) {
+        e.preventDefault();
+        AKUMA.showNotification('Выберите файл для загрузки', 'warning');
+        return;
+    }
+    
+    if (!dateInput.value) {
+        e.preventDefault();
+        AKUMA.showNotification('Укажите дату генерации отчёта', 'warning');
+        return;
+    }
+    
+    const file = fileInput.files[0];
+    if (!file.name.endsWith('.json')) {
+        e.preventDefault();
+        AKUMA.showNotification('Поддерживаются только JSON файлы', 'warning');
+        return;
+    }
+});
+</script>
+{% endblock %}

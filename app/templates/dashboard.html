@@ -1,0 +1,529 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Bitrix24 Security Audit{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Welcome Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="text-cyber-primary glow">
+                        <i class="fas fa-tachometer-alt"></i> 
+                        SECURITY COMMAND CENTER
+                    </h1>
+                    <p class="text-muted">
+                        Добро пожаловать, {{ current_user.username }}!
+                        {% if current_user.is_admin() %}
+                        <span class="badge bg-danger ms-2">SYSTEM ADMINISTRATOR</span>
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="hacker-text">
+                    <small>
+                        > SYSTEM STATUS: <span class="text-cyber-success">ONLINE</span><br>
+                        > SECURITY LEVEL: <span class="text-cyber-warning">ELEVATED</span><br>
+                        > ACTIVE SESSIONS: <span class="text-cyber-primary">{{ stats.total_users }}</span>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stats-number">{{ stats.total_projects }}</div>
+                        <div class="stats-label">Проектов</div>
+                    </div>
+                    <div class="text-cyber-primary">
+                        <i class="fas fa-project-diagram fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stats-number">{{ stats.total_scans }}</div>
+                        <div class="stats-label">Сканирований</div>
+                    </div>
+                    <div class="text-cyber-accent">
+                        <i class="fas fa-search fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stats-number">{{ stats.total_reports }}</div>
+                        <div class="stats-label">Отчётов</div>
+                    </div>
+                    <div class="text-cyber-success">
+                        <i class="fas fa-file-alt fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stats-number">{{ stats.total_users }}</div>
+                        <div class="stats-label">Пользователей</div>
+                    </div>
+                    <div class="text-cyber-warning">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Row -->
+    <div class="row">
+        <!-- Recent Projects -->
+        <div class="col-lg-8 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-project-diagram"></i> 
+                        RECENT PROJECTS
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_projects %}
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover">
+                            <thead>
+                                <tr>
+                                    <th><i class="fas fa-tag"></i> Проект</th>
+                                    <th><i class="fas fa-link"></i> URL</th>
+                                    <th><i class="fas fa-shield-alt"></i> Статус</th>
+                                    <th><i class="fas fa-clock"></i> Последнее сканирование</th>
+                                    <th><i class="fas fa-cogs"></i> Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for project in recent_projects %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ project.name }}</strong>
+                                        {% if project.description %}
+                                        <br><small class="text-muted">{{ project.description[:50] }}{% if project.description|length > 50 %}...{% endif %}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ project.url }}" target="_blank" class="text-cyber-accent">
+                                            {{ project.url[:30] }}{% if project.url|length > 30 %}...{% endif %}
+                                            <i class="fas fa-external-link-alt ms-1"></i>
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{% if project.status == 'active' %}success{% else %}warning{% endif %}">
+                                            {{ project.status.upper() }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% set latest_scan = project.get_latest_vulnerability_scan() %}
+                                        {% if latest_scan %}
+                                        <small class="text-cyber-primary">
+                                            {{ latest_scan.created_at.strftime('%d.%m.%Y %H:%M') }}
+                                        </small>
+                                        {% else %}
+                                        <span class="text-muted">Не сканировался</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('project_detail', project_id=project.id) }}" 
+                                           class="btn btn-sm btn-outline-primary" 
+                                           data-bs-toggle="tooltip" 
+                                           title="Подробности проекта">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Нет доступных проектов</h5>
+                        <p class="text-muted">Создайте первый проект для начала аудита безопасности</p>
+                        <a href="{{ url_for('create_project') }}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Создать проект
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Overview -->
+        <div class="col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-shield-alt"></i> 
+                        SECURITY OVERVIEW
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Vulnerability Chart -->
+                    <div class="mb-4">
+                        <h6 class="text-cyber-accent">Распределение уязвимостей</h6>
+                        <canvas id="vulnerabilityChart" width="300" height="300"></canvas>
+                    </div>
+                    
+                    <!-- Quick Actions -->
+                    <div class="mb-4">
+                        <h6 class="text-cyber-accent">Быстрые действия</h6>
+                        <div class="d-grid gap-2">
+                            <a href="{{ url_for('create_project') }}" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Новый проект
+                            </a>
+                            {% if current_user.is_admin() %}
+                            <a href="{{ url_for('users') }}" class="btn btn-outline-primary">
+                                <i class="fas fa-users"></i> Управление пользователями
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- System Info -->
+                    <div class="hacker-text">
+                        <h6 class="text-cyber-accent">Системная информация</h6>
+                        <small>
+                            > KERNEL VERSION: AKUMA v1.0<br>
+                            > UPTIME: <span id="system-uptime">00:00:00</span><br>
+                            > CPU USAGE: <span class="text-cyber-success">12%</span><br>
+                            > MEMORY: <span class="text-cyber-primary">2.1GB / 8GB</span><br>
+                            > THREATS DETECTED: <span class="text-cyber-danger">0</span>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Log -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-history"></i> 
+                            SYSTEM ACTIVITY LOG
+                        </h5>
+                        <div class="hacker-text">
+                            <small>> REAL-TIME MONITORING ACTIVE</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="activity-log" class="hacker-text" style="height: 200px; overflow-y: auto; font-size: 0.85rem;">
+                        <div class="log-entry">
+                            <span class="text-cyber-primary">[{{ current_time or 'LOADING' }}]</span>
+                            <span class="text-cyber-success">INFO</span>
+                            User {{ current_user.username }} connected to security dashboard
+                        </div>
+                        <div class="log-entry">
+                            <span class="text-cyber-primary">[{{ current_time or 'LOADING' }}]</span>
+                            <span class="text-cyber-accent">SYS</span>
+                            Security audit system initialized successfully
+                        </div>
+                        <div class="log-entry">
+                            <span class="text-cyber-primary">[{{ current_time or 'LOADING' }}]</span>
+                            <span class="text-cyber-warning">WARN</span>
+                            Monitoring {{ stats.total_projects }} active projects
+                        </div>
+                        {% if current_user.is_admin() %}
+                        <div class="log-entry">
+                            <span class="text-cyber-primary">[{{ current_time or 'LOADING' }}]</span>
+                            <span class="text-cyber-danger">ADMIN</span>
+                            Administrator privileges granted to {{ current_user.username }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Initialize dashboard features
+document.addEventListener('DOMContentLoaded', function() {
+    initializeVulnerabilityChart();
+    initializeActivityLog();
+    initializeSystemUptime();
+    loadDashboardStats();
+});
+
+// Vulnerability chart
+function initializeVulnerabilityChart() {
+    const chartData = {
+        critical: 2,
+        high: 5,
+        medium: 12,
+        low: 8
+    };
+    
+    AKUMA.createVulnerabilityChart('vulnerabilityChart', chartData);
+}
+
+// Activity log with real-time updates
+function initializeActivityLog() {
+    const log = document.getElementById('activity-log');
+    
+    // Simulate real-time activity
+    setInterval(() => {
+        addLogEntry('SYS', 'System heartbeat - All systems operational', 'accent');
+    }, 30000); // Every 30 seconds
+    
+    // Auto-scroll to bottom
+    log.scrollTop = log.scrollHeight;
+}
+
+function addLogEntry(level, message, colorClass = 'primary') {
+    const log = document.getElementById('activity-log');
+    const timestamp = new Date().toLocaleTimeString('ru-RU');
+    
+    const entry = document.createElement('div');
+    entry.className = 'log-entry';
+    entry.innerHTML = `
+        <span class="text-cyber-primary">[${timestamp}]</span>
+        <span class="text-cyber-${colorClass}">${level}</span>
+        ${message}
+    `;
+    
+    log.appendChild(entry);
+    
+    // Keep only last 20 entries
+    const entries = log.querySelectorAll('.log-entry');
+    if(entries.length > 20) {
+        entries[0].remove();
+    }
+    
+    // Auto-scroll to bottom
+    log.scrollTop = log.scrollHeight;
+}
+
+// System uptime counter
+function initializeSystemUptime() {
+    const startTime = new Date();
+    
+    setInterval(() => {
+        const now = new Date();
+        const uptime = now - startTime;
+        
+        const hours = Math.floor(uptime / (1000 * 60 * 60));
+        const minutes = Math.floor((uptime % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((uptime % (1000 * 60)) / 1000);
+        
+        const uptimeElement = document.getElementById('system-uptime');
+        if(uptimeElement) {
+            uptimeElement.textContent = 
+                `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+    }, 1000);
+}
+
+// Load dashboard statistics via AJAX
+function loadDashboardStats() {
+    AKUMA.makeRequest('/api/stats')
+        .then(data => {
+            // Update vulnerability chart with real data
+            AKUMA.createVulnerabilityChart('vulnerabilityChart', {
+                critical: data.critical_vulnerabilities || 0,
+                high: data.high_vulnerabilities || 0,
+                medium: data.medium_vulnerabilities || 0,
+                low: data.low_vulnerabilities || 0
+            });
+            
+            // Add log entry about loaded stats
+            addLogEntry('DATA', `Loaded statistics: ${data.total_vulnerabilities} vulnerabilities across ${data.total_projects} projects`, 'success');
+        })
+        .catch(error => {
+            console.error('Failed to load dashboard stats:', error);
+            addLogEntry('ERROR', 'Failed to load real-time statistics', 'danger');
+        });
+}
+
+// Terminal-style command input (Easter egg)
+let commandHistory = [];
+let commandIndex = -1;
+
+document.addEventListener('keydown', function(e) {
+    // Ctrl+` to open command input
+    if(e.ctrlKey && e.key === '`') {
+        e.preventDefault();
+        showCommandInput();
+    }
+});
+
+function showCommandInput() {
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.innerHTML = `
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark border-cyber">
+                <div class="modal-header border-cyber">
+                    <h5 class="modal-title text-cyber-primary">
+                        <i class="fas fa-terminal"></i> 
+                        SYSTEM TERMINAL
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="hacker-text mb-3">
+                        <div id="terminal-output" style="height: 200px; overflow-y: auto; background: #000; padding: 10px; border-radius: 5px;">
+                            <div class="text-cyber-success">AKUMA Security Terminal v1.0</div>
+                            <div class="text-cyber-primary">Type 'help' for available commands</div>
+                            <div><span class="text-cyber-accent">root@audit:~$</span> <span id="cursor">_</span></div>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-text bg-cyber-primary text-dark">$</span>
+                        <input type="text" class="form-control" id="terminal-input" placeholder="Enter command..." autocomplete="off">
+                        <button type="button" class="btn btn-primary" onclick="executeCommand()">
+                            <i class="fas fa-play"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    const bsModal = new bootstrap.Modal(modal);
+    
+    // Focus input when modal is shown
+    modal.addEventListener('shown.bs.modal', function() {
+        document.getElementById('terminal-input').focus();
+    });
+    
+    // Handle enter key
+    document.getElementById('terminal-input').addEventListener('keydown', function(e) {
+        if(e.key === 'Enter') {
+            executeCommand();
+        }
+    });
+    
+    modal.addEventListener('hidden.bs.modal', function() {
+        document.body.removeChild(modal);
+    });
+    
+    bsModal.show();
+}
+
+function executeCommand() {
+    const input = document.getElementById('terminal-input');
+    const output = document.getElementById('terminal-output');
+    const command = input.value.trim();
+    
+    if(!command) return;
+    
+    // Add command to history
+    commandHistory.push(command);
+    
+    // Add command to output
+    const commandLine = document.createElement('div');
+    commandLine.innerHTML = `<span class="text-cyber-accent">root@audit:~$</span> ${command}`;
+    output.appendChild(commandLine);
+    
+    // Process command
+    const result = processCommand(command);
+    const resultLine = document.createElement('div');
+    resultLine.innerHTML = result;
+    output.appendChild(resultLine);
+    
+    // Clear input and scroll to bottom
+    input.value = '';
+    output.scrollTop = output.scrollHeight;
+}
+
+function processCommand(command) {
+    const args = command.toLowerCase().split(' ');
+    const cmd = args[0];
+    
+    switch(cmd) {
+        case 'help':
+            return `<div class="text-cyber-primary">Available commands:</div>
+                   <div>help - Show this help</div>
+                   <div>status - System status</div>
+                   <div>whoami - Current user info</div>
+                   <div>projects - List projects</div>
+                   <div>clear - Clear terminal</div>
+                   <div>akuma - About the system</div>`;
+        
+        case 'status':
+            return `<div class="text-cyber-success">System Status: ONLINE</div>
+                   <div>Projects: {{ stats.total_projects }}</div>
+                   <div>Scans: {{ stats.total_scans }}</div>
+                   <div>Users: {{ stats.total_users }}</div>`;
+        
+        case 'whoami':
+            return `<div class="text-cyber-primary">{{ current_user.username }} ({{ current_user.role }})</div>`;
+        
+        case 'projects':
+            return `<div class="text-cyber-primary">Active Projects:</div>
+                   {% for project in recent_projects %}
+                   <div>- {{ project.name }} ({{ project.url }})</div>
+                   {% endfor %}`;
+        
+        case 'clear':
+            document.getElementById('terminal-output').innerHTML = 
+                `<div class="text-cyber-success">AKUMA Security Terminal v1.0</div>
+                 <div class="text-cyber-primary">Type 'help' for available commands</div>`;
+            return '';
+        
+        case 'akuma':
+            return `<div class="text-cyber-danger">
+                   ╔══════════════════════════════════════╗<br>
+                   ║      🛡️ AKUMA SECURITY SYSTEM       ║<br>
+                   ║                                      ║<br>
+                   ║    "In code we trust,                ║<br>
+                   ║     in security we excel"            ║<br>
+                   ║                                      ║<br>
+                   ║    Author: AKUMA                     ║<br>
+                   ║    Version: 1.0                      ║<br>
+                   ╚══════════════════════════════════════╝
+                   </div>`;
+        
+        default:
+            return `<div class="text-cyber-danger">Command not found: ${command}</div>`;
+    }
+}
+
+// Animate stats cards on load
+document.addEventListener('DOMContentLoaded', function() {
+    const statsCards = document.querySelectorAll('.stats-card');
+    statsCards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.5s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+});
+</script>
+{% endblock %}
