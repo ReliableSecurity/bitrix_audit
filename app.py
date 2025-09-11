@@ -7,10 +7,10 @@
 Author: AKUMA
 """
 
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, abort
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
-from datetime import datetime
+from datetime import datetime, timezone
 import os
 import sys
 import json
@@ -43,7 +43,7 @@ login_manager.login_message_category = 'warning'
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return db.session.get(User, int(user_id))
 
 # Инициализация базы данных
 init_db(app)
@@ -100,7 +100,7 @@ def login():
         user = User.query.filter_by(username=username).first()
         
         if user and user.check_password(password) and user.is_active:
-            user.last_login = datetime.utcnow()
+            user.last_login = datetime.now(timezone.utc)
             db.session.commit()
             
             login_user(user, remember=True)
@@ -381,6 +381,37 @@ def api_stats():
         stats['critical_vulnerabilities'] += vuln_stats.get('critical', 0)
     
     return jsonify(stats)
+
+@app.route('/users/<int:user_id>/change_password', methods=['POST'])
+@login_required
+def change_user_password(user_id):
+    """Смена пароля пользователя (только для админа или самого пользователя)"""
+    if not current_user.is_admin() and current_user.id != user_id:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    user = db.session.get(User, user_id) or abort(404)
+    data = request.get_json()
+    
+    if not data or 'new_password' not in data:
+        return jsonify({'error': 'New password required'}), 400
+    
+    new_password = data['new_password']
+    
+    # Валидация пароля
+    if len(new_password) < 6:
+        return jsonify({'error': 'Password must be at least 6 characters long'}), 400
+    
+    try:
+        # Хеширование нового пароля
+        user.password_hash = generate_password_hash(new_password)
+        db.session.commit()
+        
+        log_audit_action('UPDATE', 'USER', user_id, f'Password changed for user: {user.username}')
+        return jsonify({'success': True, 'message': f'Пароль для пользователя {user.username} успешно изменён'})
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5001)

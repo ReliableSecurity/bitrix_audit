@@ -1,0 +1,172 @@
+{
+  "report_info": {
+    "generated_at": "2025-09-11T16:49:51Z",
+    "hostname": "akuma",
+    "scan_type": "comprehensive_system_audit",
+    "version": "3.0_PRO",
+    "generated_by": "AKUMA Professional System Audit Script",
+    "scan_duration": "1757609391 seconds"
+  },
+  "system_info": {
+    "os_name": "Ubuntu 24.04.3 LTS",
+    "os_version": "24.04",
+    "kernel_version": "6.8.0-79-generic",
+    "architecture": "x86_64",
+    "uptime": "up 5 hours, 24 minutes",
+    "hostname": "akuma"
+  },
+  "hardware": {
+    "cpu": {
+      "model": "13th Gen Intel(R) Core(TM) i9-13900KF",
+      "cores": 32,
+      "frequency_mhz": "5500.000",
+      "architecture": "x86_64",
+      "status": "OK"
+    },
+    "memory": {
+      "total_gb": 31,
+      "used_gb": 9,
+      "free_gb": 21,
+      "cached_gb": 13,
+      "usage_percent": "31.2",
+      "swap_usage_percent": "0.0",
+      "status": "OK"
+    },
+    "storage": {
+      "root_disk": "393G,152G,223G,41%",
+      "total_storage": "415M",
+      "inode_usage": "5%",
+      "io_stats": "2.95:0.07:0.00|::|Device:rrqm/s:%rrqm|loop0:0.00:0.00|loop1:0.00:0.00"
+    }
+  },
+  "software": {
+    "web_servers": {
+      "apache": {
+        "version": "NOT_INSTALLED",
+        "status": "NOT_FOUND",
+        "modules_loaded": ""
+      },
+      "nginx": {
+        "version": "NOT_INSTALLED",
+        "status": "NOT_FOUND",
+        "config_test": ""
+      }
+    },
+    "databases": {
+      "mysql": {
+        "version": "NOT_INSTALLED",
+        "type": "Unknown",
+        "status": "NOT_FOUND",
+        "service_status": "NOT_INSTALLED"
+      }
+    },
+    "programming": {
+      "php": {
+        "version": "8.3.6",
+        "status": "OK",
+        "critical_modules": "json,libxml,openssl"
+      }
+    }
+  },
+  "network": {
+    "interfaces": "enp7s0,wlp0s20f3,docker0",
+    "internal_ip": "192.168.1.17",
+    "external_ip": "109.225.41.64",
+    "ports": {
+      "80": "CLOSED",
+      "443": "CLOSED",
+      "22": "OPEN",
+      "3306": "CLOSED",
+      "25": "CLOSED",
+      "587": "CLOSED",
+      "993": "CLOSED",
+      "995": "CLOSED"
+    }
+  },
+  "performance": {
+    "load_average": {
+      "1min": "0.33",
+      "5min": "0.48",
+      "15min": "0.55",
+      "status": "OK"
+    },
+    "memory_usage_percent": "31.2",
+    "swap_usage_percent": "0.0"
+  },
+  "security": {
+    "selinux": {
+      "status": "NOT_AVAILABLE",
+      "mode": "UNKNOWN"
+    },
+    "firewall": {
+      "iptables": {
+        "status": "DEFAULT_POLICY_ONLY",
+        "rules_count": 00,
+        "ipv6_rules_count": 00
+      },
+      "ufw": {
+        "status": "INACTIVE",
+        "rules_count": 0
+      },
+      "firewalld": {
+        "status": "NOT_INSTALLED",
+        "active_zones": ""
+      }
+    },
+    "intrusion_prevention": {
+      "fail2ban": {
+        "status": "NOT_INSTALLED",
+        "active_jails": ""
+      }
+    },
+    "ssh": {
+      "status": "CONFIGURED",
+      "port": "22",
+      "root_login": "default",
+      "password_auth": "default"
+    }
+  },
+  "bitrix_environment": {
+    "directory_status": "NOT_FOUND",
+    "config_status": "NOT_FOUND",
+    "version": "UNKNOWN",
+    "backup_status": "NOT_FOUND",
+    "log_status": "NOT_FOUND",
+    "permissions": "NOT_CHECKED"
+  },
+  "services": {
+    "apache2": "NOT_INSTALLED",
+    "httpd": "NOT_INSTALLED",
+    "nginx": "NOT_INSTALLED",
+    "mysql": "NOT_INSTALLED",
+    "mariadb": "NOT_INSTALLED",
+    "mysqld": "NOT_INSTALLED",
+    "redis-server": "NOT_INSTALLED",
+    "redis": "NOT_INSTALLED",
+    "memcached": "NOT_INSTALLED",
+    "postfix": "NOT_INSTALLED",
+    "dovecot": "NOT_INSTALLED",
+    "fail2ban": "NOT_INSTALLED",
+    "ssh": "RUNNING",
+    "sshd": "RUNNING",
+    "cron": "RUNNING",
+    "rsyslog": "RUNNING",
+    "systemd-resolved": "RUNNING",
+    "firewalld": "NOT_INSTALLED"
+  },
+  "summary": {
+    "scan_timestamp": "2025-09-11T16:49:51Z",
+    "total_services_checked": 18,
+    "running_services": 5,
+    "security_components": {
+      "selinux_active": "false",
+      "firewall_configured": "true",
+      "fail2ban_active": "false"
+    },
+    "system_health": "HEALTHY",
+    "bitrix_environment": "NOT_DETECTED",
+    "recommendations": [
+      "Install and configure Fail2ban for intrusion prevention"
+    ]
+  }
+}

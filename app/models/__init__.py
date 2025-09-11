@@ -9,7 +9,7 @@ Author: AKUMA
 
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
-from datetime import datetime
+from datetime import datetime, timezone
 from werkzeug.security import generate_password_hash, check_password_hash
 import json
 
@@ -31,7 +31,7 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(120), nullable=False)
     role = db.Column(db.String(20), nullable=False, default='user')  # admin, user, viewer
     is_active = db.Column(db.Boolean, default=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     last_login = db.Column(db.DateTime)
     
     # Связь с проектами
@@ -77,8 +77,8 @@ class Project(db.Model):
     description = db.Column(db.Text)
     url = db.Column(db.String(255), nullable=False)
     status = db.Column(db.String(20), nullable=False, default='active')  # active, inactive, archived
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     created_by_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     
     # Связи
@@ -128,7 +128,7 @@ class VulnerabilityScan(db.Model):
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
     scan_data = db.Column(db.Text, nullable=False)  # JSON данные сканирования
     status = db.Column(db.String(20), nullable=False, default='completed')  # running, completed, failed
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     scan_duration = db.Column(db.Integer)  # Продолжительность в секундах
     target_url = db.Column(db.String(255), nullable=False)
     
@@ -170,7 +170,7 @@ class SystemReport(db.Model):
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
     report_data = db.Column(db.Text, nullable=False)  # JSON данные отчёта
     uploaded_by_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     report_date = db.Column(db.DateTime, nullable=False)  # Дата когда был сгенерирован отчёт
     filename = db.Column(db.String(255))  # Оригинальное имя файла
     
@@ -220,7 +220,7 @@ class AuditLog(db.Model):
     details = db.Column(db.Text)
     ip_address = db.Column(db.String(45))
     user_agent = db.Column(db.String(255))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     
     # Связи
     user = db.relationship('User', backref=db.backref('audit_logs', lazy=True))

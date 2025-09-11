@@ -295,16 +295,28 @@
           </div>
           
           <!-- Рекомендации -->
-          {% if report_data.get('summary', {}).get('recommendations') %}
+          {% set recommendations = report_data.get('summary', {}).get('recommendations', []) %}
+          {% if recommendations %}
           <hr class="border-cyber mt-4">
           <div class="mt-4">
             <h6 class="text-cyber-danger">⚠️ Рекомендации:</h6>
             <div class="alert alert-warning bg-dark border-warning">
-              <ul class="mb-0">
-                {% for rec in report_data.get('summary', {}).get('recommendations', []) %}
-                <li>{{ rec }}</li>
+              <ul class="mb-0 text-white">
+                {% for rec in recommendations %}
+                <li class="text-warning">{{ rec }}</li>
                 {% endfor %}
               </ul>
+            </div>
+          </div>
+          {% else %}
+          <hr class="border-cyber mt-4">
+          <div class="mt-4">
+            <h6 class="text-cyber-danger">⚠️ Рекомендации:</h6>
+            <div class="alert alert-info bg-dark border-info">
+              <p class="mb-0 text-info">
+                <i class="fas fa-info-circle"></i> 
+                Рекомендации не найдены в системном отчёте или система работает стабильно.
+              </p>
             </div>
           </div>
           {% endif %}

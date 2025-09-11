@@ -173,37 +173,39 @@
 
         <!-- Security Overview -->
         <div class="col-lg-4 mb-4">
-            <div class="card">
+            <div class="card h-100">
                 <div class="card-header">
                     <h5 class="mb-0">
                         <i class="fas fa-shield-alt"></i> 
                         SECURITY OVERVIEW
                     </h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body d-flex flex-column" style="max-height: 600px; overflow-y: auto;">
                     <!-- Vulnerability Chart -->
-                    <div class="mb-4">
+                    <div class="mb-4 flex-shrink-0">
                         <h6 class="text-cyber-accent">Распределение уязвимостей</h6>
-                        <canvas id="vulnerabilityChart" width="300" height="300"></canvas>
+                        <div style="height: 250px; display: flex; align-items: center; justify-content: center;">
+                            <canvas id="vulnerabilityChart" width="250" height="250"></canvas>
+                        </div>
                     </div>
                     
                     <!-- Quick Actions -->
-                    <div class="mb-4">
+                    <div class="mb-4 flex-shrink-0">
                         <h6 class="text-cyber-accent">Быстрые действия</h6>
                         <div class="d-grid gap-2">
-                            <a href="{{ url_for('create_project') }}" class="btn btn-primary">
+                            <a href="{{ url_for('create_project') }}" class="btn btn-primary btn-sm">
                                 <i class="fas fa-plus"></i> Новый проект
                             </a>
                             {% if current_user.is_admin() %}
-                            <a href="{{ url_for('users') }}" class="btn btn-outline-primary">
-                                <i class="fas fa-users"></i> Управление пользователями
+                            <a href="{{ url_for('users') }}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-users"></i> Пользователи
                             </a>
                             {% endif %}
                         </div>
                     </div>
                     
                     <!-- System Info -->
-                    <div class="hacker-text">
+                    <div class="hacker-text flex-grow-1">
                         <h6 class="text-cyber-accent">Системная информация</h6>
                         <small>
                             > KERNEL VERSION: AKUMA v1.0<br>

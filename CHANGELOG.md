@@ -1,86 +1,141 @@
-# 🛡️ Bitrix24 Security Audit System - Changelog
+# 🛡️ AKUMA'S BITRIX24 SECURITY AUDIT SYSTEM - CHANGELOG
 
-## Version 1.1 - 2025-01-11
+## [v3.1.0 PRO] - 2025-09-11 🚀
 
-### ✅ Исправления и улучшения
+### 🔥 MAJOR UPDATES
 
-#### 🔧 Исправленные проблемы:
+#### 🛡️ **PROFESSIONAL SYSTEM AUDIT SCRIPT v3.0 PRO**
+- **🆕 NEW FILE:** `bitrix24_system_audit_pro.sh` - полностью переписанный скрипт аудита
+- **❌ REMOVED:** `bitrix24_system_check_json.sh` - заменён на PRO версию
+- **✅ FIXED:** Правильная проверка MySQL/MariaDB с корректным определением версий
+- **✅ FIXED:** Полная проверка безопасности: SELinux, iptables, ip6tables, UFW, firewalld
+- **✅ NEW:** Расширенная проверка SSH конфигурации (port, root login, password auth)
+- **✅ NEW:** Детальная проверка системных ресурсов (CPU частота, архитектура, I/O статистика)
+- **✅ NEW:** Проверка Fail2ban с активными jail'ами
+- **✅ NEW:** Улучшенная проверка Битрикс окружения с определением версии
+- **✅ NEW:** Умные рекомендации на основе результатов аудита
 
-1. **Ошибка на странице пользователей**
-   - ❌ Проблема: `UndefinedError: 'now' is undefined` в шаблоне `users.html`
-   - ✅ Исправление: Удалена зависимость от функции `now()` в Jinja2
-   - 📍 Файл: `app/templates/admin/users.html:172`
+#### 🔐 **PASSWORD MANAGEMENT SYSTEM**
+- **✅ NEW:** Полнофункциональная система смены паролей пользователей
+- **✅ NEW:** Интерактивная проверка силы пароля в real-time
+- **✅ NEW:** Валидация совпадения паролей
+- **✅ NEW:** Переключение видимости паролей
+- **✅ NEW:** Админские права на смену паролей любых пользователей
 
-2. **Проблемы с отображением системных отчетов**
-   - ❌ Проблема: Неполное отображение данных системного аудита
-   - ✅ Исправление: Улучшен парсинг JSON данных и добавлено детальное отображение
-   - 📍 Файл: `app/templates/projects/detail.html:234-296`
+#### 🛠️ **SYSTEM IMPROVEMENTS**
+- **✅ FIXED:** Исправлены deprecation warnings в SQLAlchemy и datetime
+- **✅ FIXED:** Обновлены модели данных для использования новых методов
+- **✅ IMPROVED:** Улучшен интерфейс управления пользователями
+- **✅ NEW:** Добавлены детальные логи времени выполнения операций
 
-3. **Отсутствие функционала удаления проектов**
-   - ❌ Проблема: Админ не мог удалять проекты
-   - ✅ Исправление: Добавлен роут и интерфейс удаления проектов
-   - 📍 Файлы: `app.py:335-359`, `app/templates/projects/list.html:64-127`
+### 🔧 Technical Fixes
 
-#### 🧹 Очистка системы:
+#### Backend (app.py, models/)
+- Замена `User.query.get()` на `db.session.get(User, id)`
+- Замена `datetime.utcnow()` на `datetime.now(timezone.utc)`
+- Исправление отступов и импортов
+- Добавление маршрута `/users/<int:user_id>/change_password`
 
-1. **База данных**
-   - ✅ Удалены все старые отчеты из БД (5 vulnerability scans, 1 system report)
-   - ✅ Очищены логи аудита (9 записей)
+#### Frontend (templates/)
+- JavaScript функции для смены паролей в `users.html`
+- Улучшена читаемость текста на тёмном фоне
+- Добавлены модальные окна для смены паролей
+- Валидация форм на стороне клиента
 
-2. **Файлы отчетов**
-   - ✅ Удалены все файлы отчетов из папки reports/
-   - ✅ Удалены временные JSON файлы из корневой папки
+#### System Audit Script
+- Полностью переписанный алгоритм проверки версий ПО
+- Исправлены ошибки парсинга iptables правил
+- Добавлена проверка IPv6 firewall
+- Улучшенная проверка сетевых портов
+- Детальная диагностика системных сервисов
 
-3. **Старые скрипты**
-   - ✅ Удален `bitrix24_system_check.sh` (не генерировал JSON)
-   - ✅ Удален временный `cleanup_database.py`
+### 📊 New JSON Report Structure
 
-#### ⚙️ Улучшения функционала:
-
-1. **Системные отчеты**
-   - ✅ Добавлено детальное отображение:
-     - 📊 Performance (CPU Load, Memory, Disk Usage)  
-     - 🔒 Security Checks с статусами
-     - ⚙️ Running Services
-     - ⚠️ Рекомендации из отчета
-
-2. **Управление проектами**
-   - ✅ Добавлена кнопка удаления для администраторов
-   - ✅ Подтверждение удаления с предупреждением
-   - ✅ Каскадное удаление связанных записей
-   - ✅ AJAX обработка с уведомлениями
-
-3. **Настройки сервера**
-   - ✅ Изменен порт на 5001 (для избежания конфликтов)
-   - ✅ Обновлен README.md с правильным портом
-
-### 🚀 Как запустить обновленную версию:
-
-```bash
-# Активируйте виртуальное окружение
-source venv/bin/activate  
-
-# Запустите сервер 
-python run.py
-
-# Откройте в браузере
-http://localhost:5001
+```json
+{
+  "report_info": { "version": "3.0_PRO", "scan_type": "comprehensive_system_audit" },
+  "system_info": { "os_name", "os_version", "kernel_version", "architecture", "uptime" },
+  "hardware": { "cpu": {...}, "memory": {...}, "storage": {...} },
+  "software": { "web_servers": {...}, "databases": {...}, "programming": {...} },
+  "network": { "interfaces", "internal_ip", "external_ip", "ports": {...} },
+  "performance": { "load_average": {...}, "memory_usage_percent", "swap_usage_percent" },
+  "security": {
+    "selinux": {...},
+    "firewall": { "iptables": {...}, "ufw": {...}, "firewalld": {...} },
+    "intrusion_prevention": { "fail2ban": {...} },
+    "ssh": {...}
+  },
+  "bitrix_environment": { "directory_status", "config_status", "version", "backup_status" },
+  "services": { ... 18+ services with detailed status ... },
+  "summary": {
+    "security_components": {...},
+    "system_health": "HEALTHY|ATTENTION_REQUIRED",
+    "bitrix_environment": "DETECTED|NOT_DETECTED",
+    "recommendations": [...]
+  }
+}
 ```
 
-### 🔐 Данные для входа:
-- **Username:** `admin`
-- **Password:** `admin123`
+### 🎯 What's New in PRO Audit Script
 
-### 📋 Следующие шаги для развития:
+1. **🔍 Enhanced Detection:**
+   - MySQL vs MariaDB proper identification
+   - Service status with start times
+   - Auto-start configuration check
+   - Network interfaces and IP detection
 
-1. **Интеграция сканеров** - улучшение веб-интерфейса запуска
-2. **PDF экспорт** - генерация отчетов в PDF
-3. **API расширение** - больше endpoint'ов для автоматизации
-4. **Уведомления** - система email/Slack уведомлений
-5. **Планировщик** - автоматические сканирования по расписанию
+2. **🔐 Security Focus:**
+   - SELinux mode and configuration
+   - iptables/ip6tables rule counting
+   - UFW status and rule analysis
+   - firewalld zones and services
+   - Fail2ban jail monitoring
+   - SSH hardening checks
+
+3. **⚡ Performance Metrics:**
+   - Load average with CPU core comparison
+   - Detailed memory breakdown (used/free/cached/swap)
+   - Disk I/O statistics (if iostat available)
+   - Inode usage monitoring
+
+4. **🏗️ Bitrix24 Specific:**
+   - Multiple path detection (/home/bitrix/www, /var/www/html, etc.)
+   - Version detection from Bitrix files
+   - Permissions and ownership analysis
+   - Backup and log directory checks
+
+### 🚨 Breaking Changes
+
+- **REMOVED:** `bitrix24_system_check_json.sh`
+- **CHANGED:** JSON report structure (backward compatible parsing)
+- **UPDATED:** Database models use new SQLAlchemy methods
+
+### 🔮 Next Release Plans (v3.2.0)
+
+- [ ] User role management system
+- [ ] Scheduled scans with cron integration
+- [ ] PDF report generation
+- [ ] Email notifications for critical issues
+- [ ] API endpoints for external integrations
+- [ ] Docker containerization
 
 ---
 
-**Author:** AKUMA  
-**Date:** 11.01.2025  
-**Status:** ✅ All issues resolved, system ready for production use
+## [v3.0.0] - 2025-09-11 (Previous Release)
+
+### Added
+- Project management interface
+- Vulnerability scanning integration
+- System report uploading
+- User authentication system
+- Dark cyber security theme
+- Admin dashboard with statistics
+
+---
+
+**🔥 AKUMA's Professional Security Audit System**  
+**Author:** AKUMA - Legendary Hacker & Microservices Guru  
+**Release Date:** September 11, 2025  
+**Status:** ✅ Production Ready - Locked & Loaded! 🚀
+
+*"Как говорил мой дед: 'Хороший аудит безопасности — это как хороший взлом: всё должно быть найдено, проанализировано и зафиксировано!'"* 😎
