@@ -376,12 +376,5 @@ lsof -i :5000
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 👨‍💻 Author
-
-**AKUMA**
-- GitHub: [@sweetpotatohack](https://github.com/sweetpotatohack)
-- Project: [Akuma_bitrix_audit](https://github.com/sweetpotatohack/Akuma_bitrix_audit)
-
----
 
 ⭐ **Star this repo if you find it useful!** ⭐
